@@ -1,0 +1,877 @@
+////////////////********Order processing Application (Payment for Products)   ***************////////////////////
+////////////////********Have used the following Design Patterns concepts in respective modules///////////////////
+///////////////•	User sees Menu Iterator Pattern////////////////////////////////////////////////////////////////
+//////////////•	Adding product items for order Builder Design Pattern////////////////////////////////////////////
+/////////////•	Order and Cancellation of product items Command Design Pattern///////////////////////////////////
+
+////////////Product Deliver App Model:///////////////////////
+
+ProductMenuModel.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.ProductDeliveryAppModel
+{
+    public class ProductMenuModel
+    {
+        private string companyId;
+        public string CompanyId
+        {
+            get { return companyId; }
+            set { companyId = value; }
+        }
+
+        private string productId;
+        public string ProductId
+        {
+            get { return productId; }
+            set { productId = value; }
+        }
+
+        private string productname;
+        public string ProductName
+        {
+            get { return productname; }
+            set { productname = value; }
+        }
+        
+    }
+}
+
+CompanyModel.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.ProductDeliveryAppModel
+{
+    public class CompanyModel
+    {
+        private string companyId;
+        public string CompanyId
+        {
+            get { return companyId; }
+            set { companyId = value; }
+        }
+
+        private string name;
+        public string Name
+        {
+            get { return name; }
+            set { name = value; }
+        }
+
+        private string address;
+        public string Address
+        {
+            get { return address; }
+            set { address = value; }
+        }
+
+        private int rating;
+        public int Rating
+        {
+            get { return rating; }
+            set { rating = value; }
+        }
+    }
+}
+
+UserModel.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.ProductDeliveryAppModel
+{
+    public class UserModel
+    {
+        public String UserId { get; set; }
+
+        public String UserName { get; set; }
+
+        public String PhoneNumber { get; set; }
+
+        public String Address { get; set; }
+
+        public double Amount { get; set; }
+    }
+}
+
+ProductOrderDriver.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using ProductDeliveryApp.OrderAndCancellation;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.ProductDeliveryDriver
+{
+    public class ProductOrderDriver
+    {
+        /// <summary>
+        /// This driver called Command Design Pattern
+        /// </summary>
+        /// <param name="selectedProductItems"></param>
+        /// <param name="totalCost"></param>
+        /// <param name="companyId"></param>
+        /// <param name="orderId"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public char ProductItemOrderByUser(List<ProductMenuModel> selectedProductItems, double totalCost, string companyId, out string orderId, out UserModel user)
+        {
+            Console.WriteLine(string.Empty);
+            Console.WriteLine("Do you want to place order(y/n)...?");
+            var wantsOrder = Console.ReadKey().KeyChar;
+            Console.WriteLine(string.Empty);
+
+            orderId = string.Empty;
+            user = null;
+
+            if (wantsOrder == 'y')
+            {
+                Console.WriteLine("_________________________");
+                Product product = new Product();
+                OrderProduct orderProduct = new OrderProduct(product);
+                orderProduct.ProductItems = selectedProductItems;
+                orderProduct.User = new UserModel();
+                orderProduct.User.UserId = "test123";
+                orderProduct.User.UserName = "Test 123";
+                orderProduct.User.Address = "Bangalore";
+                orderProduct.User.PhoneNumber = "98989898";
+                orderProduct.User.Amount = totalCost;
+                orderProduct.CompanyId = companyId;
+                user = orderProduct.User;
+                Customer customer = new Customer();
+                customer.TakeOrder(orderProduct);
+                customer.PlaceOrders();
+                orderId = orderProduct.OrderId;
+                Console.WriteLine(string.Empty);
+            }
+
+            //Order Cancellation.
+            char cancel = 'n';
+            if (!string.IsNullOrEmpty(orderId))
+            {
+                Console.WriteLine("Do you want to cancel order(y/n)...?");
+                cancel = Console.ReadKey().KeyChar;
+                Console.WriteLine(string.Empty);
+
+                if (cancel == 'y')
+                {
+                    Console.WriteLine(String.Empty);
+                    Product product = new Product();
+                    CancelProduct cancelOrder = new CancelProduct(product);
+                    cancelOrder.OrderId = orderId;
+                    Customer customer = new Customer();
+                    customer.TakeOrder(cancelOrder);
+                    customer.PlaceOrders();
+                }
+            }
+
+            return cancel;
+        }
+    }
+}
+
+////////////////////////ProductItem Building://///////////////////////////////
+
+ProductItem.cs
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.Ordering
+{
+    public class ProductItem
+    {
+        private List<ProductMenuModel> productItems = new List<ProductMenuModel>();
+
+        public void AddProductItem(List<ProductMenuModel> items)
+        {
+            productItems.AddRange(items);
+        }
+
+        public double GetCost()
+        {
+            double cost = 0;
+
+            foreach (var item in productItems)
+            {
+                cost += item.Rate;
+            }
+
+            return cost;
+        }
+
+        public void ShowItems()
+        {
+            foreach (var item in productItems)
+            {
+                Console.WriteLine("Product Id: {0}", item.ProductId);
+                Console.WriteLine("Product Name: {0}", item.ProductName);
+                Console.WriteLine("Product Price: {0}", item.Rate);
+                Console.WriteLine("Product Rating: {0}", item.Rating);
+                Console.WriteLine("----------------------------");
+            }
+        }
+    }
+}
+
+ProductBuilder.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.Ordering
+{
+    public class ItemBuilder
+    {
+        public Item item;
+        public void PrepareProductItem(List<ProductMenuModel> productMenu)
+        {
+            item = new Item();
+            productItem.AddProductItem(productMenu);
+        }
+    }
+}
+
+////////////////////////////////ProductDeliveryDriver///////////////////////////////////////////////
+
+ItemBuilderDriver.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using ProductDeliveryApp.Ordering;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.ProductDeliveryDriver
+{
+    public class ItemBuilderDriver
+    {
+        /// <summary>
+        /// This driver called that module which followed Builder Design Pattern
+        /// </summary>
+        /// <param name="selectedProductItems"></param>
+        /// <returns></returns>
+        public double BuildItemForUser(List<ProductMenuModel> selectedProductItems)
+        {
+            Console.WriteLine();
+            Console.WriteLine("You Selected Below Product Items");
+            Console.WriteLine("_______________________________");
+            ProductItemBuilder productBuilder = new ItemBuilder();
+            ProductItemBuilder.PrepareProductItem(selectedProductItems);
+            productItemBuilder.productItem.ShowItems();
+            var totalCost = itemBuilder.productItem.GetCost();
+            Console.WriteLine("Total Cost(Rs.): {0}", totalCost);
+            return totalCost;
+        }
+    }
+}
+
+ItemMenuIteratorDriver.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using ProductDeliveryApp.CompanyProductMenu;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProuctDeliveryApp.ProductDeliveryDriver
+{
+    /// <summary>
+    /// This driver called - Iterator Pattern.
+    /// </summary>
+    public class ItemMenuIteratorDriver
+    {
+        public List<ProductMenuModel> PrintItemMenu(string companyId)
+        {
+            Waitress waitress = new Waitress(companyId);
+            var productMenu = waitress.PrintProductMenu();
+            return productMenu;
+        }
+    }
+}
+
+ItemOrderDriver.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using ProductDeliveryApp.OrderAndCancellation;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.ProductDeliveryDriver
+{
+    public class ItemOrderDriver
+    {
+        /// <summary>
+        /// This driver called Command Design Pattern
+        /// </summary>
+        /// <param name="selectedProductsItem"></param>
+        /// <param name="totalCost"></param>
+        /// <param name="companyId"></param>
+        /// <param name="orderId"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public char ItemOrderByUser(List<ProductMenuModel> selectedProductsItem, double totalCost, string companyId, out string orderId, out UserModel user)
+        {
+            Console.WriteLine(string.Empty);
+            Console.WriteLine("Do you want to place order(y/n)...?");
+            var wantsOrder = Console.ReadKey().KeyChar;
+            Console.WriteLine(string.Empty);
+
+            orderId = string.Empty;
+            user = null;
+
+            if (wantsOrder == 'y')
+            {
+                Console.WriteLine("_________________________");
+                Product product = new Product();
+                OrderProduct orderProduct = new OrderProduct(product);
+                orderProduct.ProductItems = selectedProductsItem;
+                orderProduct.User = new UserModel();
+                orderProduct.User.UserId = "test123";
+                orderProduct.User.UserName = "Test";
+                orderProduct.User.Address = "Bangalore";
+                orderProduct.User.PhoneNumber = "82345678";
+                orderProduct.User.Amount = totalCost;
+                orderProduct.CompanyId = companyId;
+                user = orderProduct.User;
+                Customer customer = new Customer();
+                customer.TakeOrder(orderProduct);
+                customer.PlaceOrders();
+                orderId = orderProduct.OrderId;
+                Console.WriteLine(string.Empty);
+            }
+
+            //Order Cancellation.
+            char cancel = 'n';
+            if (!string.IsNullOrEmpty(orderId))
+            {
+                Console.WriteLine("Do you want to cancel order(y/n)...?");
+                cancel = Console.ReadKey().KeyChar;
+                Console.WriteLine(string.Empty);
+
+                if (cancel == 'y')
+                {
+                    Console.WriteLine(String.Empty);
+                    Product product = new Product();
+                    CancelProduct cancelOrder = new CancelProduct(product);
+                    cancelOrder.OrderId = orderId;
+                    Customer customer = new Customer();
+                    customer.TakeOrder(cancelOrder);
+                    customer.PlaceOrders();
+                }
+            }
+
+            return cancel;
+        }
+    }
+}
+
+
+ItemSelectorDriver.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.ProductDeliveryDriver
+{
+    public class ItemSelectorDriver
+    {
+        public List<ProductMenuModel> ItemSelectionbyUser(List<ProductMenuModel> productMenu)
+        {
+            //Item Selector.
+
+            Console.WriteLine(string.Empty);
+            Console.WriteLine("Please select the product items");
+            Console.WriteLine("_________________________");
+
+            List<ProductMenuModel> selectedProductsItem = new List<ProductMenuModel>();
+            char answer;
+            do
+            {
+                Console.WriteLine("Enter product Id:");
+                var productId = Console.ReadLine();
+                var productItem = productMenu.Where(e => e.ProductId == productId).FirstOrDefault();
+                if (productItem != null)
+                {
+                    Console.WriteLine("You Selected Below product Item:");
+                    Console.WriteLine("------------------------------");
+                    Console.WriteLine("Name: {0}", productItem.ProductName);
+                    Console.WriteLine("Rate(Rs.): {0}", productItem.Rate);
+                    Console.WriteLine("Rating: {0}", productItem.Rating);
+                    selectedProductsItem.Add(productItem);
+                }
+                else
+                    Console.WriteLine("Invalid Product Id Selected. No product Item available with this Id.");
+
+                Console.WriteLine(string.Empty);
+
+                Console.WriteLine("Do you want to add more product item(y/n):...?");
+                answer = Console.ReadKey().KeyChar;
+                Console.WriteLine(string.Empty);
+
+            } while (answer != 'n');
+
+            return selectedProductItems;
+        }
+    }
+}
+
+OrderTrackingDriver.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using ProductDeliveryApp.Tracking;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.ProductDeliveryDriver
+{
+    public class OrderTrackingDriver
+    {
+        /// <summary>
+        /// This Driver used Observer Design Pattern
+        /// </summary>
+        /// <param name="companyId"></param>
+        /// <param name="orderId"></param>
+        /// <param name="user"></param>
+        /// <param name="cancel"></param>
+        public void OrderTrackingByUser(string companyId, string orderId, UserModel user, char cancel)
+        {
+            //Order Tracking.
+            if (cancel != 'y')
+            {
+                Console.WriteLine(string.Empty);
+                Console.WriteLine("Product Delivery Status");
+                Console.WriteLine("---------------------");
+
+                Company company = new Company(companyId, orderId, "Order Received");
+                company.Attach(new Customers(user));
+                Thread.Sleep(1000);
+                company.DeliveryStatus = "Dispatched";
+                Thread.Sleep(1000);
+                company.DeliveryStatus = "On the way.";
+                Thread.Sleep(1000);
+                company.DeliveryStatus = "Near to your home";
+                company.DeliveryStatus = "Delivered";
+            }
+
+            Console.ReadKey();
+        }
+    }
+}
+
+//////////////////////////////OrderAndCancellation///////////////////////////////////////////////////
+
+CancelProduct.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.OrderAndCancellation
+{
+    public class CancelProduct : IProductOrderCommands
+    {
+        private Product product;
+        public string OrderId;
+
+        public CancelProduct(Product product)
+        {
+            this.product = product;
+        }
+
+        public void Execute()
+        {
+            product.CancelProduct(OrderId);
+        }
+    }
+}
+
+Customer.cs
+
+using ProductDeliveryApp.Ordering;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.OrderAndCancellation
+{
+    public class Customer
+    {
+        List<IProductOrderCommands> orderList = new List<IProductOrderCommands>();
+
+        public void TakeOrder(IProductOrderCommands order)
+        {
+            orderList.Add(order);
+        }
+
+        public void PlaceOrders()
+        {
+            foreach (var order in orderList)
+            {
+                order.Execute();
+            }
+
+            orderList.Clear();
+        }
+    }
+}
+
+Product.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.OrderAndCancellation
+{
+    public class Product
+    {
+        public string OrderProduct( string companyId, UserModel user)
+        {
+            var orderId = (companyId + Guid.NewGuid().ToString().Substring(0, 15)).ToUpper();
+            Console.WriteLine("Order ID: {0}", orderId);
+            Console.WriteLine("Customer Name : {0}", user.UserName);
+            Console.WriteLine("Mobile : {0}", user.PhoneNumber);
+            Console.WriteLine("User ID : {0}", user.UserId);
+            Console.WriteLine("Address : {0}", user.Address);
+            Console.WriteLine("Amount(Rs.): {0}", user.Amount);
+            Console.WriteLine("Product Ordered");
+            return orderId.ToString();
+        }
+
+        public void CancelProduct(string orderId)
+        {
+            Console.WriteLine("Product Order with Order ID {0} has been cancelled.", orderId);
+        }
+    }
+}
+
+IProductOrderCommands.cs 
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.OrderAndCancellation
+{
+    public interface IProductOrderCommands
+    {
+        void Execute();
+    }
+}
+
+OrderProduct.cs
+
+Using ProductDeliveryApp.ProductDeliveryAppModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.OrderAndCancellation
+{
+    public class OrderProduct : IProductOrderCommands
+    {
+        private Product product;
+        public List<ProductMenuModel> ProductItems;
+        public UserModel User;
+        public string OrderId;
+        public string CompanyId;
+
+        public OrderProduct(Product product)
+        {
+            this.product = product;
+        }
+
+        public void Execute()
+        {
+            OrderId = product.OrderProduct(CompanyId,User);
+        }
+    }
+}
+
+CompanyProductMenu:
+
+ProductMenu.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using ProductDeliveryApp.ProductMenu;
+using ProductDeliveryApp.CompanyWebService;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.CompanyProductMenu
+{
+    public class ProductMenu : IProductMenu
+    {
+        private string companyId;
+        public ProductMenu(string companyId)
+        {
+            this.companyId = companyId;
+        }
+        public List<ProductMenuModel> GetProductMenuItems()
+        {
+            ProductMenuService productMenuService = new ProductMenuService(string.Empty, companyId);
+            var productMenuItems = productMenuService.getAllProductMenu(companyId);
+            return productMenuItems;
+        }
+
+        public IIterator CreateProductMenuIterator()
+        {
+            var productMenuItems = GetProductMenuItems();
+            return new CompanyProductMenuIterator(productMenuItems);
+        }
+    }
+}
+
+IProductMenu.cs
+
+using ProductDeliveryApp.ProductMenu;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.CompanyProductMenu
+{
+   public interface IProductMenu
+    {
+       IIterator CreateProductMenuIterator();
+    }
+}
+
+IIterator.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.ProductMenu
+{
+    public interface IIterator 
+    {
+        bool HasNext();
+        Object Next();
+    }
+}
+
+CompanyProductMenuIterator.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using ProductDeliveryApp.ProductMenu;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.CompanyProductMenu
+{
+    public class CompanyProductMenuIterator : IIterator
+    {
+        List<ProductMenuModel> items;
+        int position = 0;
+
+        public CompanyProductMenuIterator(List<ProductMenuModel> items)
+        {
+            this.items = items;
+        }
+
+        public bool HasNext()
+        {
+            if (position >= items.Count || items[position] == null)
+                return false;
+            else
+                return true;
+        }
+
+        public object Next()
+        {
+            ProductMenuModel menuItem = items[position];
+            position = position + 1;
+            return menuItem;
+        }
+    }
+}
+
+ProductMenuService.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.CompanyWebService
+{
+    public class ProductMenuService
+    {
+        public ProductMenuService(string endPoint, string companyId)
+        {
+            //Initialize web service with the endpoint string.
+            //Data for product Menu items will fetch based on the Company Id.
+        }
+
+        public List<ProductMenuModel> getAllProductMenu(string companyId)
+        {
+            List<ProductMenuModel> productMenu = new List<ProductMenuModel>();
+            productMenu.Add(new ProductMenuModel { companyId = "001", ProductId = "001", ProductName = "Physical Product"});
+            productMenu.Add(new ProductMenuModel { companyId = "001", ProductId = "002", ProductName = "Book-Magazine"});
+            productMenu.Add(new ProductMenuModel { companyId = "001", ProductId = "003", ProductName = "Membership-New"});
+            productMenu.Add(new ProductMenuModel { companyId = "001", ProductId = "004", ProductName = "Membership-Upgrade"});
+            productMenu.Add(new ProductMenuModel { companyId = "001", ProductId = "005", ProductName = "Learning SKI"});
+
+            return productMenu;
+        }
+    }
+}
+
+CompanyService.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductDeliveryApp.CompanyWebService
+{
+    public class CompanyService
+    {
+        public CompanyService(string endPoint) {
+        
+            //Initialize web service with the endpoint string.
+        }
+
+        /// <summary>
+        /// This method should expose Webservice to fetch all Companys.
+        /// </summary>
+        public List<CompanyModel> GetAllCompanies()
+        {
+            List<CompanyModel>  companys = new List<CompanyModel>();
+            companies.Add(new CompanyModel { CompanyId="001", Name = "XXXXXXX", Address = "Bangalore"});
+            companies.Add(new CompanyModel { CompanyId="002", Name = "YYYYYYY", Address = "Mumbai"});
+            companies.Add(new CompanyModel { CompanyId="003", Name = "ZZZZZZZ", Address = "Kolkata"});
+            companies.Add(new CompanyModel { CompanyId="004", Name = "AAAAAAA", Address = "Odisha”});
+            companies.Add(new CompanyModel { CompanyId="005", Name = "BBBBBBB", Address = "Bhubaneshwar"});
+            return companies;
+        }
+    }
+}
+
+Program.cs
+
+using ProductDeliveryApp.ProductDeliveryAppModel;
+using ProductDeliveryApp.OrderAndCancellation;
+using ProductDeliveryApp.Ordering;
+using ProductDeliveryApp.CompanyProductMenu;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
+using ProductDeliveryApp.ProductDeliveryDriver;
+
+namespace ProductDeliveryApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            #region User Sees Product Menu
+            //User sees Product Menu Items based on the selected Company Id.
+            ItemMenuIteratorDriver itemMenuIteratorDriver = new ItemMenuIteratorDriver();
+            var productMenu = itemMenuIteratorDriver.PrintItemMenu(companyId);
+            #endregion
+            
+            #region User Selects Item
+            //Product Item Selector.
+            ItemSelectorDriver itemSelectorDriver = new ItemSelectorDriver();
+            var selectedProductsItem = itemSelectorDriver.ItemSelectionbyUser(productMenu);
+            #endregion
+
+            #region company Builds Items
+            //Calling Product Item Builder
+            ItemBuilderDriver itemBuilderDriver = new ItemBuilderDriver();
+            var totalCost = productItemBuilderDriver.BuildProductItemForUser(selectedProductsItem);
+            #endregion
+
+            #region User Orders Product
+            //Order Product
+            string orderId = string.Empty;
+            UserModel user = null;
+            ProdutItemOrderDriver productItemOrderDriver = new ItemOrderDriver();
+            var cancel = itemOrderDriver.ProductItemOrderByUser(selectedProductsItem, totalCost, companyId, out orderId, out user);
+            #endregion
+
+            #region User Tracks Order
+            //Order Tracking.
+            OrderTrackingDriver orderTrackingDriver = new OrderTrackingDriver();
+            orderTrackingDriver.OrderTrackingByUser(companyId, orderId, user, cancel);
+            #endregion
+
+            Console.ReadKey();
+        }
+    }
+}
+
